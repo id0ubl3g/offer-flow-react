@@ -5,7 +5,7 @@ import type { DispatchSettings, Schedule } from "../api/types";
 import { useToast } from "../components/Toast";
 import { EmptyState, PageHeader, PageLoading, Spinner, Switch } from "../components/ui";
 import { WEEKDAYS } from "../utils/format";
-import { describeNextRun, nextRun } from "../utils/schedule";
+import { conflictingSchedule, describeNextRun, nextRun } from "../utils/schedule";
 
 function DayPicker({ value, onChange }: { value: number[]; onChange: (days: number[]) => void }) {
   return (
@@ -108,8 +108,15 @@ export function SchedulesPage() {
 
   useEffect(load, [load]);
 
+  const conflict = schedules && time ? conflictingSchedule(time, schedules) : null;
+
   async function create(event: FormEvent) {
     event.preventDefault();
+
+    if (conflict) {
+      return;
+    }
+
     setBusy(true);
 
     try {
@@ -154,29 +161,32 @@ export function SchedulesPage() {
               <CalendarClock size={18} />
               <div className="grow">
                 <div className="card-title">Horários de disparo</div>
-                <div className="card-subtitle">Horário de Brasília. Uma oferta da fila por horário.</div>
+                <div className="card-subtitle">Horário de Brasília. Uma oferta da fila por horário, com pelo menos 1 hora entre um horário e outro.</div>
               </div>
             </div>
             <form className="card-pad form-stack" style={{ borderBottom: "1px solid var(--border)" }} onSubmit={create}>
               <div className="row wrap" style={{ gap: 16, alignItems: "flex-end" }}>
                 <div className="field" style={{ width: 130 }}>
                   <label className="label" htmlFor="time">Horário</label>
-                  <input id="time" className="input" type="time" value={time} onChange={(e) => setTime(e.target.value)} required />
+                  <input id="time" className={`input ${conflict ? "invalid" : ""}`} type="time" value={time} onChange={(e) => setTime(e.target.value)} required />
                 </div>
                 <div className="field grow">
                   <span className="label">Dias</span>
                   <DayPicker value={days} onChange={setDays} />
                 </div>
-                <button className="btn btn-primary" disabled={busy || !days.length}>
+                <button className="btn btn-primary" disabled={busy || !days.length || !!conflict}>
                   {busy ? <Spinner /> : <Plus size={16} />}
                   Adicionar
                 </button>
               </div>
+              <span className="hint" style={conflict ? { color: "var(--danger)" } : undefined}>
+                {conflict ? `Muito perto de ${conflict.send_time}. Deixe pelo menos 1 hora entre os horários, mesmo em dias diferentes.` : "Deixe pelo menos 1 hora entre os horários, mesmo em dias diferentes."}
+              </span>
             </form>
             {schedules === null ? (
               <PageLoading />
             ) : schedules.length === 0 ? (
-              <EmptyState icon={<CalendarClock size={20} />} title="Nenhum horário" text="Adicione horários como 09:00, 12:00 e 18:00. O worker dispara a próxima oferta da fila em cada um." />
+              <EmptyState icon={<CalendarClock size={20} />} title="Nenhum horário" text="Adicione horários como 09:00, 12:00 e 18:00, com pelo menos 1 hora entre eles. O worker dispara a próxima oferta da fila em cada um." />
             ) : (
               schedules.map((schedule) => (
                 <div key={schedule.id} className="list-row schedule-row" style={{ opacity: schedule.active ? 1 : 0.55 }}>
