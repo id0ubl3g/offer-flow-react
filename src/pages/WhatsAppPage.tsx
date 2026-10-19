@@ -6,6 +6,7 @@ import { useToast } from "../components/Toast";
 import { Badge, ConfirmDialog, EmptyState, Modal, PageHeader, PageLoading, Spinner, Switch } from "../components/ui";
 import { TagInput, TagList } from "../components/Tags";
 import { useLive } from "../live/LiveContext";
+import { MAX_ACTIVE_GROUPS } from "../utils/limits";
 import { collectTags } from "../utils/tags";
 import { formatDateTime, formatPhone } from "../utils/format";
 
@@ -163,6 +164,11 @@ export function WhatsAppPage() {
   }
 
   async function toggle(group: Group, active: boolean) {
+    if (active && groups.filter((item) => item.active).length >= MAX_ACTIVE_GROUPS) {
+      toast.error(`Limite de ${MAX_ACTIVE_GROUPS} grupos ativos. Desative um grupo para ativar outro.`);
+      return;
+    }
+
     setGroups((current) => current.map((item) => (item.id === group.id ? { ...item, active } : item)));
 
     try {
@@ -209,6 +215,7 @@ export function WhatsAppPage() {
 
   const connected = instance?.status === "open";
   const activeCount = groups.filter((group) => group.active).length;
+  const atLimit = activeCount >= MAX_ACTIVE_GROUPS;
   const reach = groups.filter((group) => group.active).reduce((total, group) => total + (group.participants_count ?? 0), 0);
   const visible = groups.filter((group) => {
     if (query && !group.name.toLowerCase().includes(query.toLowerCase())) {
@@ -251,8 +258,8 @@ export function WhatsAppPage() {
             </div>
             <div className="card kpi">
               <div className="kpi-label"><Users size={14} /> Grupos ativos</div>
-              <div className="kpi-value">{activeCount}<span className="muted" style={{ fontSize: 16, fontWeight: 500 }}> / {groups.length}</span></div>
-              <div className="kpi-foot">{groups.some((group) => group.active && group.tags?.length) ? "alguns filtram por etiqueta" : "recebem cada oferta da fila"}</div>
+              <div className="kpi-value">{activeCount}<span className="muted" style={{ fontSize: 16, fontWeight: 500 }}> / {MAX_ACTIVE_GROUPS}</span></div>
+              <div className="kpi-foot">{atLimit ? "limite atingido, desative um para trocar" : `limite de ${MAX_ACTIVE_GROUPS} · ${groups.length} sincronizados`}</div>
             </div>
             <div className="card kpi">
               <div className="kpi-label"><MessageCircle size={14} /> Alcance por disparo</div>
@@ -267,7 +274,7 @@ export function WhatsAppPage() {
             <div className="card-header wrap card-toolbar">
               <div className="grow">
                 <div className="card-title">Grupos</div>
-                <div className="card-subtitle">Ative os grupos que devem receber as ofertas agendadas. Use etiquetas para que um grupo receba só certos produtos.</div>
+                <div className="card-subtitle">Ative até {MAX_ACTIVE_GROUPS} grupos para receber as ofertas agendadas. Use etiquetas para que um grupo receba só certos produtos.</div>
               </div>
               <div className="search">
                 <Search size={15} />
@@ -324,7 +331,7 @@ export function WhatsAppPage() {
                         </div>
                       </td>
                       <td className="cell-action">
-                        <Switch checked={group.active} disabled={!group.can_send} label={`Ativar ${group.name}`} onChange={(value) => toggle(group, value)} />
+                        <Switch checked={group.active} disabled={!group.can_send || (atLimit && !group.active)} label={`Ativar ${group.name}`} onChange={(value) => toggle(group, value)} />
                       </td>
                     </tr>
                   ))}
