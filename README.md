@@ -180,8 +180,8 @@ Scheduled dispatches are sent by the backend worker, so the API and the worker m
 | `/forgot-password` | Sends the recovery code by email and sets a new password. |
 | `/offers` | Lists, creates, edits, test sends and queues offers. |
 | `/queue` | Shows queued offers in dispatch order. |
-| `/schedules` | Manages dispatch times, delays between groups and daily limit. |
-| `/whatsapp` | Connects the number with a QR code and activates groups. |
+| `/schedules` | Manages dispatch times, at least 1 hour apart, delays between groups and daily limit. |
+| `/whatsapp` | Connects the number with a QR code and activates up to 20 groups. |
 | `/history` | Lists dispatch runs with the result for each group. |
 | `/settings` | Default message template, theme, account data and account deletion. |
 

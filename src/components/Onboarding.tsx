@@ -21,6 +21,7 @@ const TIPS = [
   { title: "Etiquetas", text: "Dê etiquetas às ofertas e aos grupos para que cada grupo receba só o que combina com ele. Grupos sem etiqueta recebem tudo." },
   { title: "Envio de teste", text: "Use o ícone de enviar no card da oferta para ver a mensagem num grupo antes de colocá-la na fila." },
   { title: "Ritmo de envio", text: "Em Horários, ajuste o intervalo entre grupos e o limite diário para reduzir o risco de bloqueio do número." },
+  { title: "Limites", text: "Cada oferta vai para até 20 grupos ativos, e os horários precisam ter pelo menos 1 hora entre si, mesmo em dias diferentes." },
   { title: "Histórico", text: "Cada disparo mostra o resultado por grupo. Falhas podem ser reenviadas de lá." }
 ];
 
